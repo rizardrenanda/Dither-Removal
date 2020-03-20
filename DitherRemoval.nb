@@ -34,12 +34,6 @@ Cell["Dither Removal", "Title",
 
 Cell["\<\
 
-Bart M. ter Haar Romeny\
-\>", "Subsubtitle",
- CellChangeTimes->{3.412966126203125*^9},
- TextAlignment->Left,
- TextJustification->1],
-
 Cell[TextData[{
  StyleBox["Mathematica",
   FontSlant->"Italic"],

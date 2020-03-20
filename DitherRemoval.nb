@@ -1,0 +1,639 @@
+(* Content-type: application/mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 6.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       145,          7]
+NotebookDataLength[     20263,        631]
+NotebookOptionsPosition[     17069,        530]
+NotebookOutlinePosition[     18495,        578]
+CellTagsIndexPosition[     18396,        572]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[TextData[{
+ "The ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["Mathematica", "\[RegisteredTrademark]"], TraditionalForm]]],
+ " Journal"
+}], "Section"],
+
+Cell[CellGroupData[{
+
+Cell["Dither Removal", "Title",
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell["\<\
+
+Bart M. ter Haar Romeny\
+\>", "Subsubtitle",
+ CellChangeTimes->{3.412966126203125*^9},
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell[TextData[{
+ StyleBox["Mathematica",
+  FontSlant->"Italic"],
+ " is ideal for explaining the design of seemingly complex mathematical \
+methods. In this article we explain the use of the 2D Fourier transform to \
+remove unwanted dithering artifacts from images. All steps are visualized, so \
+the reader can get a good idea of what the Fourier transform of an image \
+looks like, the location of the origin, the artifacts and their extent, and \
+how geometric reasoning works in the Fourier domain. The method leads to a \
+marked clean up of images deteriorated by dither."
+}], "Text"],
+
+Cell[CellGroupData[{
+
+Cell["Initialization", "Section"],
+
+Cell["Some general settings:", "Text"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"SetOptions", "[", 
+   RowBox[{"ArrayPlot", ",", 
+    RowBox[{"ColorFunction", "\[Rule]", "GrayLevel"}], ",", " ", 
+    RowBox[{"Frame", "\[Rule]", "False"}]}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Off", "[", 
+   RowBox[{
+    RowBox[{"General", "::", "\"\<spell1\>\""}], ",", 
+    RowBox[{"General", "::", "\"\<spell\>\""}]}], "]"}], ";"}]}], "Input",
+ CellChangeTimes->{{3.4298267294183965`*^9, 3.4298267315243964`*^9}, {
+   3.4298267719913964`*^9, 3.4298267839313965`*^9}, {3.4648824176828003`*^9, 
+   3.4648824392264*^9}, {3.465770713481*^9, 3.4657707216800003`*^9}, {
+   3.629564619785247*^9, 3.62956463841568*^9}, 3.656152773115012*^9, 
+   3.6937348931439915`*^9, {3.6937349939285264`*^9, 3.6937349943520794`*^9}},
+ MathVisionTools`MathVisionToolsCopyRight -> {
+  "{2013, 11, 24, 10, 17}: version 3.2 (November 14th, 2010) loaded by \
+BRomeny on 6202-96067-01968.", 
+   "{2011, 10, 19, 22, 37}: version 3.2 (November 14th, 2010) loaded by \
+BRomeny on 6240-32441-29129.", 
+   "{2011, 10, 19, 18, 20}: version 3.2 (November 14th, 2010) loaded by \
+BRomeny on 6240-32441-29129.", 
+   "{2011, 10, 19, 18, 10}: version 3.2 (November 14th, 2010) loaded by \
+BRomeny on 6240-32441-29129.", 
+   "{2011, 10, 19, 18, 1}: version 3.2 (November 14th, 2010) loaded by \
+BRomeny on 6240-32441-29129.", 
+   "{2009, 10, 29, 3, 5}: version 2.22 (August 15, 2009) loaded by Bart on \
+6139-70541-51534."}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Dither Removal by Filtering", "Section"],
+
+Cell[TextData[{
+ "A \[OpenCurlyDoubleQuote]large\[CloseCurlyDoubleQuote] dithered and scanned \
+input image follows (",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"3045", "\[Times]", "1017"}], TraditionalForm]]],
+ " pixels, 1.9MB).  Note the periodic artifacts."
+}], "Text",
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+  "url", "=", 
+   "\"\<http://bmia.bmt.tue.nl/people/BRomeny/Courses/8C080/\>\""}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"im", "=", 
+   RowBox[{"Import", "[", 
+    RowBox[{"url", "<>", "\"\<AIA0019E-tiger.gif\>\""}], "]"}]}], 
+  ";"}]}], "Input",
+ CellChangeTimes->{{3.412693592609375*^9, 3.412693605359375*^9}, {
+   3.412966768796875*^9, 3.4129668164375*^9}, 3.4439784556232*^9, {
+   3.4837476218628387`*^9, 3.4837476270576477`*^9}, 3.640521509950407*^9, {
+   3.6937349580213733`*^9, 3.6937349850324974`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Show", "[", 
+  RowBox[{"im", ",", 
+   RowBox[{"ImageSize", "\[Rule]", "300"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.412693592609375*^9, 3.412693605359375*^9}, {
+   3.412966768796875*^9, 3.4129668164375*^9}, 3.4439784556232*^9}],
+
+Cell[TextData[{
+ StyleBox["Figure 1. ", "SB"],
+ "Image of a tiger, produced by printing a stock-art photo with an 85 lpi \
+(lines per inch) dot screen and then scanned."
+}], "NumberedFigureCaption",
+ CellChangeTimes->{{3.6937350289570026`*^9, 3.693735029209233*^9}}],
+
+Cell[TextData[{
+ "The image is imported as a structure, in which the pixels and the header \
+data are embedded. The pixels can be extracted as the ",
+ StyleBox["\[LeftDoubleBracket]1,1\[RightDoubleBracket]", "InlineInput"],
+ " element."
+}], "Text"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"pixels", "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"ImageData", "[", "im", "]"}], "\[LeftDoubleBracket]", 
+     RowBox[{"All", ",", "All", ",", "1"}], "\[RightDoubleBracket]"}], "//", 
+    "N"}]}], ";"}], "\n", 
+ RowBox[{"Dimensions", "[", "pixels", "]"}]}], "Input",
+ CellChangeTimes->{{3.4670138480186*^9, 3.4670138577686*^9}, {
+  3.6937351046444006`*^9, 3.6937351052671967`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"1017", ",", "3045"}], "}"}]], "Output",
+ CellChangeTimes->{3.6937350557030964`*^9, 3.6937351103224525`*^9}]
+}, Open  ]],
+
+Cell["\<\
+To develop the method, we do not need the whole image. For speed and lower \
+memory use, we take a subimage. We can see the periodic dithering more \
+clearly by zooming in.\
+\>", "Text",
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell[BoxData[
+ RowBox[{"ArrayPlot", "[", 
+  RowBox[{"subim", "=", 
+   RowBox[{"Take", "[", 
+    RowBox[{"pixels", ",", 
+     RowBox[{"{", 
+      RowBox[{"500", ",", "780"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"380", ",", "700"}], "}"}]}], "]"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.412693634984375*^9, 3.412693638765625*^9}, {
+   3.412693681546875*^9, 3.412693702609375*^9}, 3.693734883946827*^9},
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell["\<\
+With the function Manipulate it is very easy to view a moving area, with \
+variable size:\
+\>", "Text",
+ CellChangeTimes->{{3.41296732478125*^9, 3.412967358171875*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Manipulate", "[", 
+  RowBox[{
+   RowBox[{"ArrayPlot", "[", 
+    RowBox[{
+     RowBox[{"subim", "=", 
+      RowBox[{"Take", "[", 
+       RowBox[{"pixels", ",", 
+        RowBox[{"{", 
+         RowBox[{"row", ",", 
+          RowBox[{"row", "+", "size"}]}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"cols", ",", 
+          RowBox[{"cols", "+", "size"}]}], "}"}]}], "]"}]}], ",", 
+     RowBox[{"ImageSize", "->", "450"}]}], "]"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"row", ",", "325"}], "}"}], ",", "1", ",", "780", ",", "1"}], 
+    "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"cols", ",", "935"}], "}"}], ",", "1", ",", "2500", ",", "1"}], 
+    "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"size", ",", "450"}], "}"}], ",", "100", ",", "700", ",", "1"}],
+     "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.412693634984375*^9, 3.412693638765625*^9}, {
+   3.412693681546875*^9, 3.412693702609375*^9}, {3.4129668985*^9, 
+   3.412966931625*^9}, {3.412966972*^9, 3.412967094328125*^9}, {
+   3.412967157265625*^9, 3.412967164*^9}, {3.4129671954375*^9, 
+   3.412967245078125*^9}, {3.6325028774381695`*^9, 3.632502897784333*^9}, {
+   3.632502963097069*^9, 3.6325030423736033`*^9}, 3.693734883946827*^9},
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{"ydim", ",", "xdim"}], "}"}], "=", 
+  RowBox[{"Dimensions", "[", "subim", "]"}]}]], "Input",
+ CellChangeTimes->{3.412967373453125*^9}],
+
+Cell[TextData[{
+ "Because the dithering has a high spatial frequency, we suspect these \
+frequencies to be higher than most of the other frequencies in the image. We \
+compute the Fourier spectrum of the input image and plot its absolute value. \
+Because the origin is really large, the image is automatically scaled with a \
+large factor, which reduces the contrast. We zoom in on a limited range (",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"0", 
+    RowBox[{"\[Dash]", "2"}]}], TraditionalForm]]],
+ ") of spectral values."
+}], "Text",
+ CellChangeTimes->{{3.467013924833*^9, 3.4670139263618*^9}}],
+
+Cell[BoxData[
+ RowBox[{"ArrayPlot", "[", 
+  RowBox[{
+   RowBox[{"Abs", "[", 
+    RowBox[{"fft", "=", 
+     RowBox[{"Fourier", "[", "subim", "]"}]}], "]"}], ",", 
+   RowBox[{"PlotRange", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", "2"}], "}"}]}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.41269371421875*^9, 3.412693717375*^9}, {
+   3.4670139055982*^9, 3.4670139177194*^9}, 3.6937348839625297`*^9},
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell["\<\
+The significant image frequencies are around the origin (i.e., in the corners \
+of the periodic spectrum plot). The marked peaks at other locations are proof \
+of the existence of strong periodic signals due to dithering. We will use a \
+mask that allows only frequencies near the origin to be included: a low-pass \
+filter for spatial frequencies. \
+\>", "Text"],
+
+Cell[TextData[{
+ "The mask is most easily created by an elliptic Gaussian weighting function \
+in the center (different standard deviations in the ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"x", "\[InvisibleComma]"}], TraditionalForm]]],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"y", "\[InvisibleComma]"}], TraditionalForm]]],
+ " directions), which is then shifted over half the image size in each \
+dimension to put the kernel at the origin of the Fast Fourier Transform (FFT) \
+domain, which is in the lower left. Note that the Fourier domain is periodic \
+in either dimension, so we actually see a single tile of a whole tiled 2D \
+space in the ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"x", "\[InvisibleComma]"}], TraditionalForm]]],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"y", "\[InvisibleComma]"}], TraditionalForm]]],
+ " direction. The standard deviations have to be estimated from the 2D plot \
+of the spectrum. For speed, we exploit the separability of the 2D Gaussian \
+kernel. We first make two 1D arrays of Gaussian values and then multiply them \
+into a matrix with ",
+ StyleBox["Outer", "MR"],
+ " in a compiled function. This is about 140 times faster then a 2D ",
+ StyleBox["Table", "MR"],
+ " command. ",
+ StyleBox["\[Sigma]xs", "InlineInput"],
+ " and ",
+ StyleBox["\[Sigma]ys", "InlineInput"],
+ " are the standard deviations of the Gaussian in the ",
+ Cell[BoxData[
+  FormBox["x", TraditionalForm]]],
+ " and ",
+ Cell[BoxData[
+  FormBox["y", TraditionalForm]]],
+ " directions of the subimage."
+}], "Text"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"\[Sigma]xs", "=", "60.0"}], ";", 
+  RowBox[{"\[Sigma]ys", "=", "55."}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"mask", "=", 
+   RowBox[{"Compile", "[", 
+    RowBox[{
+     RowBox[{"{", "}"}], ",", 
+     RowBox[{"Outer", "[", 
+      RowBox[{"Times", ",", 
+       RowBox[{"Exp", "[", 
+        RowBox[{"-", 
+         FractionBox[
+          SuperscriptBox[
+           RowBox[{"(", 
+            RowBox[{
+             RowBox[{"Range", "[", "ydim", "]"}], "-", 
+             FractionBox["ydim", "2"]}], ")"}], "2"], 
+          RowBox[{"2", 
+           SuperscriptBox["\[Sigma]ys", "2"]}]]}], "]"}], ",", 
+       RowBox[{"Exp", "[", 
+        RowBox[{"-", 
+         FractionBox[
+          SuperscriptBox[
+           RowBox[{"(", 
+            RowBox[{
+             RowBox[{"Range", "[", "xdim", "]"}], "-", 
+             FractionBox["xdim", "2"]}], ")"}], "2"], 
+          RowBox[{"2", 
+           SuperscriptBox["\[Sigma]xs", "2"]}]]}], "]"}]}], "]"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"maskr", "=", 
+   RowBox[{"RotateLeft", "[", 
+    RowBox[{
+     RowBox[{"mask", "[", "]"}], ",", 
+     RowBox[{"Floor", "[", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"ydim", "/", "2"}], ",", 
+        RowBox[{"xdim", "/", "2"}]}], "}"}], "]"}]}], "]"}]}], 
+  ";"}]}], "InputOnly",
+ CellChangeTimes->{{3.492746311726282*^9, 3.4927463170614915`*^9}, {
+  3.4927463650003757`*^9, 3.4927463803352027`*^9}},
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell[BoxData[
+ RowBox[{"ArrayPlot", "[", 
+  RowBox[{"mask", "[", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.412693758046875*^9, 3.412693761640625*^9}, {
+   3.6405215686220074`*^9, 3.640521583707207*^9}, 3.6937348839625297`*^9},
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell[BoxData[
+ RowBox[{"ArrayPlot", "[", "maskr", "]"}]], "Input",
+ CellChangeTimes->{{3.412693758046875*^9, 3.412693761640625*^9}, {
+   3.6405215686220074`*^9, 3.640521605718807*^9}, 3.6937348839625297`*^9},
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell["\<\
+We also can inspect the amplitude spectrum and the low-pass Gaussian filter \
+(both functions are scaled for plotting) along the interpolated diagonal \
+positions of the rectangular image.\
+\>", "Text"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"interpolated", "=", 
+   RowBox[{"ListInterpolation", "[", 
+    RowBox[{"afft", "=", 
+     RowBox[{"Abs", "[", 
+      RowBox[{"fft", "=", 
+       RowBox[{"Fourier", "[", "subim", "]"}]}], "]"}]}], "]"}]}], 
+  ";"}]], "Input"],
+
+Cell["\<\
+We multiply the Fourier spectrum with the mask and study it visually.\
+\>", "Text",
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell[BoxData[
+ RowBox[{"ArrayPlot", "[", 
+  RowBox[{
+   RowBox[{"maskr", " ", 
+    RowBox[{"Abs", "[", "fft", "]"}]}], ",", 
+   RowBox[{"PlotRange", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1"}], "}"}]}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.412693786578125*^9, 3.412693790375*^9}, 
+   3.467014233323*^9, 3.6937348839625297`*^9},
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell["\<\
+We mask out the unwanted frequencies by multiplying the spectrum with the \
+mask, and we get the resulting image by the inverse Fourier transform. The \
+Gaussian filtering is still letting some periodic frequencies through (we \
+only like to keep the info near the corners), so we make it steeper by \
+raising it to the third power:\
+\>", "Text",
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell[BoxData[
+ RowBox[{"ArrayPlot", "[", 
+  RowBox[{
+   RowBox[{
+    SuperscriptBox["maskr", "3"], " ", 
+    RowBox[{"Abs", "[", "fft", "]"}]}], ",", 
+   RowBox[{"PlotRange", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", "1"}], "}"}]}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.41269380365625*^9, 3.412693807375*^9}, 
+   3.4670142663638*^9, 3.6937348839782314`*^9},
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"restored", "=", 
+   RowBox[{"Abs", "[", 
+    RowBox[{"InverseFourier", "[", 
+     RowBox[{"fft", " ", 
+      SuperscriptBox["maskr", "3"]}], "]"}], "]"}]}], ";"}]], "InputOnly",
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell["\<\
+The result is a markedly improved image, without the disturbing dithering \
+frequencies.\
+\>", "Text",
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell[BoxData[
+ RowBox[{"ArrayPlot", "/@", 
+  RowBox[{"{", 
+   RowBox[{"subim", ",", "restored"}], "}"}]}]], "Input",
+ CellChangeTimes->{{3.41269381803125*^9, 3.412693825484375*^9}, 
+   3.6937348839782314`*^9},
+ TextAlignment->Left,
+ TextJustification->1],
+
+Cell["\<\
+The dither is clearly removed, and details, such as the local hair bundles, \
+can now clearly be discriminated.\
+\>", "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Conclusion", "Section"],
+
+Cell[TextData[{
+ "This example shows the use of Fast Fourier Transform to remove periodic \
+artifacts from an image. Despite the large size of the input image, the \
+numerical performance of ",
+ StyleBox["Mathematica",
+  FontSlant->"Italic"],
+ " is good."
+}], "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["References", "Section"],
+
+Cell[TextData[{
+ Cell[TextData[{
+  "[",
+  
+  CounterBox["Reference"],
+  "]\[ThickSpace]\[MediumSpace]"
+ }],
+  CellSize->{24, Inherited},
+  TextAlignment->Right],
+ "R. L. Adler, B. P. Kitchens, M. Martens, C. P. Tresser, and C. W. Wu, \
+\[OpenCurlyDoubleQuote]The Mathematics of Halftoning,\[CloseCurlyDoubleQuote] \
+",
+ StyleBox["IBM Journal of Research and Development", "SO"],
+ ", ",
+ StyleBox["47", "SB"],
+ "(1), 2003 pp. 5\[Dash]15 ",
+ ButtonBox["http://www.research.ibm.com/journal/rd/471/adler.pdf",
+  BaseStyle->"Hyperlink",
+  ButtonData:>{
+    URL["http://www.research.ibm.com/journal/rd/471/adler.pdf"], None}],
+ "."
+}], "Reference",
+ CellTags->"ref:adler"],
+
+Cell[TextData[{
+ Cell[TextData[{
+  "[",
+  
+  CounterBox["Reference"],
+  "]\[ThickSpace]\[MediumSpace]"
+ }],
+  CellSize->{24, Inherited},
+  TextAlignment->Right],
+ "R. Floyd and L. Steinberg, \[OpenCurlyDoubleQuote]An Adaptive Algorithm for \
+Spatial Grey Scale,\[CloseCurlyDoubleQuote] ",
+ StyleBox["SID International Symposium Digest of Technical Papers,", "SO"],
+ " San Jose, CA: The Society for Information Display (SID), 1975 pp. \
+36\[Dash]37."
+}], "Reference",
+ CellTags->"ref:royd"]
+}, Open  ]]
+}, Open  ]]
+},
+AutoGeneratedPackage->None,
+ScreenStyleEnvironment->"Working",
+WindowToolbars->{"RulerBar", "EditBar"},
+WindowSize->{1520, 805},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+DockedCells->(FrontEndExecute[{
+   FrontEnd`NotebookApply[
+    FrontEnd`InputNotebook[], #, Placeholder]}]& ),
+PrintingCopies->1,
+PrintingPageRange->{1, Automatic},
+PageHeaders->{{Inherited, Inherited, 
+   Cell["Bart M. ter Haar Romeny", "Header"]}, {
+   Cell["Dither Removal", "Header"], Inherited, Inherited}},
+PageFooters->{{
+   Cell[
+    TextData[{"The Mathematica Journal ", 
+      StyleBox["10", FontWeight -> "Bold"], 
+      ":2 \[Copyright] 2005 Wolfram Media, Inc."}], "Footer"], Inherited, 
+   None}, {None, Inherited, 
+   Cell[
+    TextData[{"The Mathematica Journal ", 
+      StyleBox["10", FontWeight -> "Bold"], 
+      ":2 \[Copyright] 2005 Wolfram Media, Inc."}], "Footer"]}},
+ShowSelection->True,
+Magnification:>1.4 Inherited,
+FrontEndVersion->"11.0 for Microsoft Windows (64-bit) (September 21, 2016)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{
+ "ref:adler"->{
+  Cell[15883, 487, 666, 22, 47, "Reference",
+   CellTags->"ref:adler"]},
+ "ref:royd"->{
+  Cell[16552, 511, 489, 15, 47, "Reference",
+   CellTags->"ref:royd"]}
+ }
+*)
+(*CellTagsIndex
+CellTagsIndex->{
+ {"ref:adler", 18213, 563},
+ {"ref:royd", 18301, 566}
+ }
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[545, 20, 157, 6, 96, "Section"],
+Cell[CellGroupData[{
+Cell[727, 30, 76, 2, 103, "Title"],
+Cell[806, 34, 142, 6, 78, "Subsubtitle"],
+Cell[951, 42, 588, 10, 125, "Text"],
+Cell[CellGroupData[{
+Cell[1564, 56, 33, 0, 96, "Section"],
+Cell[1600, 58, 38, 0, 42, "Text"],
+Cell[1641, 60, 1432, 28, 72, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3110, 93, 46, 0, 96, "Section"],
+Cell[3159, 95, 313, 9, 42, "Text"],
+Cell[3475, 106, 546, 14, 72, "Input"],
+Cell[4024, 122, 255, 5, 43, "Input"],
+Cell[4282, 129, 266, 5, 30, "NumberedFigureCaption"],
+Cell[4551, 136, 248, 5, 42, "Text"],
+Cell[CellGroupData[{
+Cell[4824, 145, 420, 10, 72, "Input"],
+Cell[5247, 157, 147, 3, 43, "Output"]
+}, Open  ]],
+Cell[5409, 163, 241, 6, 70, "Text"],
+Cell[5653, 171, 458, 12, 43, "Input"],
+Cell[6114, 185, 178, 4, 42, "Text"],
+Cell[6295, 191, 1370, 37, 72, "Input"],
+Cell[7668, 230, 185, 5, 43, "Input"],
+Cell[7856, 237, 594, 12, 97, "Text"],
+Cell[8453, 251, 450, 12, 43, "Input"],
+Cell[8906, 265, 373, 6, 97, "Text"],
+Cell[9282, 273, 1529, 40, 180, "Text"],
+Cell[10814, 315, 1479, 46, 146, "InputOnly"],
+Cell[12296, 363, 275, 6, 43, "Input"],
+Cell[12574, 371, 253, 5, 43, "Input"],
+Cell[12830, 378, 212, 4, 70, "Text"],
+Cell[13045, 384, 259, 8, 43, "Input"],
+Cell[13307, 394, 138, 4, 42, "Text"],
+Cell[13448, 400, 391, 11, 43, "Input"],
+Cell[13842, 413, 401, 8, 97, "Text"],
+Cell[14246, 423, 417, 12, 46, "Input"],
+Cell[14666, 437, 257, 8, 44, "InputOnly"],
+Cell[14926, 447, 157, 5, 42, "Text"],
+Cell[15086, 454, 254, 7, 43, "Input"],
+Cell[15343, 463, 135, 3, 42, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[15515, 471, 29, 0, 96, "Section"],
+Cell[15547, 473, 267, 7, 71, "Text"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[15851, 485, 29, 0, 96, "Section"],
+Cell[15883, 487, 666, 22, 47, "Reference",
+ CellTags->"ref:adler"],
+Cell[16552, 511, 489, 15, 47, "Reference",
+ CellTags->"ref:royd"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
